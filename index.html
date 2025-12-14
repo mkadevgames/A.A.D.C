@@ -2,28 +2,31 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Gerador de Views Anônimas</title>
+<title>Gerador de Views Anônimas (in-page)</title>
 <style>
-  body{background:#111;color:#fff;font-family:Arial,Helvetica,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0}
-  input,button,select{padding:10px;margin:5px 0;font-size:16px;border:none;border-radius:4px}
+  body{background:#111;color:#eee;font-family:Arial,Helvetica,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0}
+  input,button,select{padding:10px;margin:6px 0;font-size:16px;border:none;border-radius:4px}
   button{background:#0f0;color:#000;cursor:pointer}
-  #console{width:90%;max-width:600px;height:150px;background:#222;color:#0f0;padding:10px;overflow-y:auto;font-size:12px;margin-top:10px}
+  #console{width:90%;max-width:600px;height:140px;background:#222;color:#0f0;padding:10px;overflow-y:auto;font-size:12px;margin-top:10px}
+  #playerBox{width:640px;height:360px;background:#000;margin-top:10px}
 </style>
 </head>
 <body>
 
-  <h2>Gerador de Views Anônimas</h2>
+  <h2>Gerador de Views Anônimas (in-page)</h2>
 
   <label>ID do vídeo (ex: dQw4w9WgXcQ):
     <input id="videoId" placeholder="dQw4w9WgXcQ">
   </label>
 
-  <label>Quantidade de views desejadas:
+  <label>Quantidade de views:
     <input id="viewsQty" type="number" min="1" value="50">
   </label>
 
   <button id="startBtn">INICIAR</button>
   <button id="stopBtn" style="background:#f33">PARAR</button>
+
+  <div id="playerBox"></div>
 
   <pre id="console"></pre>
 
@@ -35,16 +38,27 @@
 
   let running = false;
 
-  async function openClose(videoId,remaining){
+  async function cycle(videoId,remaining){
     if(!running||remaining<=0)return;
-    const url = `https://www.youtube.com/watch?v=${videoId}&autoplay=1`;
-    const win = window.open(url,'_blank');
-    log(`Abriu view ${remaining}`);
-    await sleep(35000);           // 35s dentro (garante contagem)
-    if(win && !win.closed) win.close();
-    log(`Fechou view ${remaining}`);
-    await sleep(2000);            // 2s entre ciclos
-    await openClose(videoId,remaining-1);
+
+    // destroi iframe anterior (se houver)
+    $('#playerBox').innerHTML = '';
+
+    // cria novo iframe sem cookies/storage
+    const iframe = document.createElement('iframe');
+    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&showinfo=0`;
+    iframe.width = '640';
+    iframe.height = '360';
+    iframe.setAttribute('sandbox','allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox');
+    $('#playerBox').appendChild(iframe);
+
+    log(`View ${remaining} carregando…`);
+    await sleep(32000);   // aguarda 32 s (garante contagem)
+    $('#playerBox').innerHTML = ''; // remove tudo
+    log(`View ${remaining} finalizada.`);
+
+    await sleep(2000);    // pequeno intervalo
+    await cycle(videoId,remaining-1);
   }
 
   $('#startBtn').onclick = async ()=>{
@@ -53,8 +67,8 @@
     if(!vid){alert('Informe o ID do vídeo');return;}
     running = true;
     log(`Iniciando ${qty} views para ${vid}`);
-    await openClose(vid,qty);
-    log('Finalizado.');
+    await cycle(vid,qty);
+    log('Todas as views foram executadas.');
   };
 
   $('#stopBtn').onclick = ()=>{ running=false; log('Parada solicitada.'); };
