@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Gerador de Views Anônimas</title>
+<style>
+  body{background:#111;color:#fff;font-family:Arial,Helvetica,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0}
+  input,button,select{padding:10px;margin:5px 0;font-size:16px;border:none;border-radius:4px}
+  button{background:#0f0;color:#000;cursor:pointer}
+  #console{width:90%;max-width:600px;height:150px;background:#222;color:#0f0;padding:10px;overflow-y:auto;font-size:12px;margin-top:10px}
+</style>
+</head>
+<body>
+
+  <h2>Gerador de Views Anônimas</h2>
+
+  <label>ID do vídeo (ex: dQw4w9WgXcQ):
+    <input id="videoId" placeholder="dQw4w9WgXcQ">
+  </label>
+
+  <label>Quantidade de views desejadas:
+    <input id="viewsQty" type="number" min="1" value="50">
+  </label>
+
+  <button id="startBtn">INICIAR</button>
+  <button id="stopBtn" style="background:#f33">PARAR</button>
+
+  <pre id="console"></pre>
+
+<script>
+(()=>{
+  const sleep = ms => new Promise(r=>setTimeout(r,ms));
+  const $ = q=>document.querySelector(q);
+  const log = m=>$('#console').textContent += `[${new Date().toLocaleTimeString()}] ${m}\n`;
+
+  let running = false;
+
+  async function openClose(videoId,remaining){
+    if(!running||remaining<=0)return;
+    const url = `https://www.youtube.com/watch?v=${videoId}&autoplay=1`;
+    const win = window.open(url,'_blank');
+    log(`Abriu view ${remaining}`);
+    await sleep(35000);           // 35s dentro (garante contagem)
+    if(win && !win.closed) win.close();
+    log(`Fechou view ${remaining}`);
+    await sleep(2000);            // 2s entre ciclos
+    await openClose(videoId,remaining-1);
+  }
+
+  $('#startBtn').onclick = async ()=>{
+    const vid = $('#videoId').value.trim();
+    const qty = parseInt($('#viewsQty').value)||1;
+    if(!vid){alert('Informe o ID do vídeo');return;}
+    running = true;
+    log(`Iniciando ${qty} views para ${vid}`);
+    await openClose(vid,qty);
+    log('Finalizado.');
+  };
+
+  $('#stopBtn').onclick = ()=>{ running=false; log('Parada solicitada.'); };
+})();
+</script>
+</body>
+</html>
