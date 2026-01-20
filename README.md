@@ -1,43 +1,24 @@
-♦️ A.A.D.C - Moeda Oficial
+# Bbootage
 
-Bem-vindo ao repositório oficial do site da A.A.D.C — a nova era econômica.
-Este projeto é um site institucional que apresenta a história, os valores e a visão da moeda ADC, além de contar com um minigame interativo de clique (idle/clicker) para simular a mineração e acumulação de ADC.
+Um bullet hell inspirado em rRootage (Kenta Cho), feito só por Marko o rei!
 
-🌐 Visão Geral
-O site foi criado com HTML, CSS e JavaScript puro — sem frameworks externos — para ser leve, rápido e totalmente responsivo em computadores e celulares.
-Recursos principais
-Design cyberpunk/neon com tema futurista e efeitos visuais (gradientes, sombras neon, animações, partículas)
-História do A.A.D.C contada em uma timeline elegante
-Escala de valores da moeda ADC com cards interativos
-Aviso importante sobre conversão da moeda
-Minigame completo:
-Clique com animações de partículas
-4 tipos de upgrades com custo crescente
-Produção automática por segundo
-Sistema de Prestígio (reset com multiplicador permanente)
-Interface moderna e viciante
+## Como jogar
+- Abra o index.html ou acesse o site bbootage.base44.app no navegador (Chrome/Firefox recomendados)
+- PC: WASD + Espaço
+- Celular: Toque pra mover (atira automático) + botão vermelho pra ação do modo
 
-📱 Compatibilidade
-Totalmente responsivo (PC, tablet e celular)
-Testado em Chrome, Firefox, Safari e Edge
-Sem dependências externas (exceto Google Fonts para 
-a fonte Orbitron)
+Modos: Normal, Psy, Ika, GW + Infinite (escala insano)
 
-🛠️ Tecnologias utilizadas
-HTML5
-CSS3 (Flexbox, Grid, animações, gradients, Canvas)
-Vanilla JavaScript
-Google Fonts (Orbitron)
+## Features
+- Bosses geométricos randômicos (triângulo, quadrado, círculo, pentágono, estrela, multi-camadas)
+- 13 tipos de ataques (spiral, wave, homing, vortex, zigzag e mais)
+- Low HP = barragem total na tela
+- Pause no boss death + move pra next phase
+- Efeitos: glow, blur, shake, flash, partículas insanas
+- Som chiptune (8-bit style)
 
-⚠️ Avisos
-Este é um projeto conceitual.
-A moeda ADC apresentada aqui não possui valor real e não pode ser convertida ou retirada em moeda fiduciária.
-O site são apenas para fins de entretenimento e demonstração.
+Inspirado em rRootage (2003-2005 PSP homebrew). Feito 100% HTML5 + Canvas + JS.
 
-📄 Licença
-Este projeto é de uso livre para fins educacionais e pessoais.
-Não utilize para fins comerciais ou ilegais.
+Divirta-se e mande PR se quiser adicionar mais caos! 🚀💥
 
-♦️ A.A.D.C - Uma nova era econômica começa agora ♦️
-Criado com visão, código e futuro.
-2026 © A.A.D.C - Todos os direitos reservados.
+Feito com amor por Marko, em Lins-BR, ouvindo indie lo-fi (Bed Habit, Notion no loop).
