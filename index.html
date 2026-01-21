@@ -1,39 +1,92 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bbootage — otimizado</title>
+    <title>Bbootage — otimizado (YouTube e URL)</title>
     <style>
         body { margin: 0; overflow: hidden; background: radial-gradient(circle at 20% 10%, rgba(40,0,60,0.6), transparent 200px), linear-gradient(180deg, #02020a 0%, #000000 100%); font-family: Arial, Helvetica, sans-serif; color: white; }
         canvas { display: block; margin: auto; background: transparent; }
-        #menu { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; backdrop-filter: blur(6px); background: rgba(0,0,0,0.35); padding: 24px; border-radius: 12px; }
+        #menu { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; backdrop-filter: blur(6px); background: rgba(0,0,0,0.35); padding: 24px; border-radius: 12px; width: min(920px, 92%); }
         button { padding: 10px 16px; margin: 6px; font-size: 18px; background: linear-gradient(180deg,#222,#111); color: white; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; cursor: pointer; }
+        input, select { padding: 8px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.4); color: white; }
         #score { position: absolute; top: 10px; left: 10px; font-size: 22px; text-shadow: 0 0 6px rgba(255,255,255,0.06); }
         #actionBtn { position: absolute; bottom: 20px; right: 20px; width: 80px; height: 80px; background: radial-gradient(circle,#ff4d4d,#c90000); border-radius: 50%; display: none; font-size: 18px; color: white; border: none; box-shadow: 0 8px 20px rgba(0,0,0,0.6); }
         #credits { font-size: 12px; margin-top: 12px; color: rgba(255,255,255,0.7); }
         #pauseScreen { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; font-size: 36px; display: none; background: rgba(0,0,0,0.5); padding: 18px; border-radius: 10px; }
         .hudBar { position: absolute; left: 10px; height: 12px; bottom: 30px; width: 200px; background: rgba(255,255,255,0.06); border-radius: 6px; overflow: hidden; }
         .hudFill { height: 100%; width: 0%; background: linear-gradient(90deg,#aef 0%,#58f 100%); }
+        #musicLoader { margin-bottom: 10px; display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; }
+        #musicUrl { width: 100%; min-width: 220px; }
+        #musicOverlay { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.85); padding: 14px; border-radius: 8px; display: none; z-index: 9999; box-shadow: 0 6px 18px rgba(0,0,0,0.6); width: min(480px, 92%); }
+        #musicOverlay input { width: calc(100% - 140px); }
+        #musicOverlay .row { display:flex; gap:8px; align-items:center; }
+        #musicStatus { font-size: 13px; color: rgba(255,255,255,0.85); margin-top: 8px; }
+        #youtubeContainer { position: absolute; left: -9999px; top: -9999px; width: 0; height: 0; visibility: hidden; }
+        #ytPlayerPlaceholder { width: 0; height: 0; }
+        #controlsInMenu { display:flex; gap:8px; justify-content:center; align-items:center; margin-top:8px; flex-wrap:wrap; }
+        #volume { width: 180px; }
+        @media (max-width: 640px) { #musicLoader { grid-template-columns: 1fr auto; grid-template-rows: auto auto; } }
     </style>
 </head>
 <body>
     <canvas id="canvas"></canvas>
     <div id="menu">
         <h1>Bbootage</h1>
-        <button onclick="startGame('Normal')">Normal Mode</button>
-        <button onclick="startGame('Psy')">Psy Mode</button>
-        <button onclick="startGame('Ika')">Ika Mode</button>
-        <button onclick="startGame('GW')">GW Mode</button>
-        <button onclick="startGame('Infinite')">Infinite Mode</button>
+        <div id="musicLoader">
+            <input id="musicUrl" placeholder="Cole a URL de música direta (.mp3, .ogg) ou URL do YouTube (https://youtube.com/...)" />
+            <select id="musicSource">
+                <option value="auto">Detectar automaticamente</option>
+                <option value="direct">URL Direta</option>
+                <option value="youtube">YouTube</option>
+            </select>
+            <div style="display:flex; gap:8px;">
+                <button id="loadMusicBtn">Carregar</button>
+                <button id="useOriginalBtn">Restaurar Original</button>
+            </div>
+        </div>
+        <div id="controlsInMenu">
+            <label>Volume</label>
+            <input id="volume" type="range" min="0" max="1" step="0.01" value="0.9" />
+            <button id="muteBtn">Mudo</button>
+            <button id="stopMusicBtn">Parar Música</button>
+        </div>
+        <div style="margin-top:12px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+            <button onclick="startGame('Normal')">Normal Mode</button>
+            <button onclick="startGame('Psy')">Psy Mode</button>
+            <button onclick="startGame('Ika')">Ika Mode</button>
+            <button onclick="startGame('GW')">GW Mode</button>
+            <button onclick="startGame('Infinite')">Infinite Mode</button>
+        </div>
         <p id="credits">Inspirado em rRootage, feito s? por Marko o rei!</p>
     </div>
+
+    <div id="musicOverlay">
+        <div class="row">
+            <input id="musicUrlOverlay" placeholder="Cole URL direta ou YouTube" />
+            <select id="musicSourceOverlay">
+                <option value="auto">Detectar</option>
+                <option value="direct">Direta</option>
+                <option value="youtube">YouTube</option>
+            </select>
+            <button id="loadMusicBtnOverlay">Carregar</button>
+            <button id="closeMusicOverlay">Fechar</button>
+        </div>
+        <div id="musicStatus"></div>
+    </div>
+
     <div id="score">Score: 0</div>
     <button id="actionBtn" ontouchstart="actionPress()" ontouchend="actionRelease()">Action</button>
     <div id="pauseScreen">Score: 0<br>Move to Continue</div>
     <audio id="bgm" loop src="https://orangefreesounds.com/wp-content/uploads/2025/04/8-bit-chiptune-music.mp3"></audio>
     <audio id="laser" src="https://www.zapsplat.com/wp-content/uploads/2015/sound-effects-8-bit/8bit_laser_001.mp3"></audio>
     <audio id="explosion" src="https://www.zapsplat.com/wp-content/uploads/2015/sound-effects-8-bit/8bit_explosion_001.mp3"></audio>
+
+    <div id="youtubeContainer">
+        <div id="ytPlayerPlaceholder"></div>
+    </div>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
@@ -44,8 +97,24 @@
         const bgm = document.getElementById('bgm');
         const laserSound = document.getElementById('laser');
         const explosionSound = document.getElementById('explosion');
+        const loadMusicBtn = document.getElementById('loadMusicBtn');
+        const useOriginalBtn = document.getElementById('useOriginalBtn');
+        const musicUrlInput = document.getElementById('musicUrl');
+        const musicOverlay = document.getElementById('musicOverlay');
+        const musicUrlOverlay = document.getElementById('musicUrlOverlay');
+        const loadMusicBtnOverlay = document.getElementById('loadMusicBtnOverlay');
+        const closeMusicOverlay = document.getElementById('closeMusicOverlay');
+        const musicStatus = document.getElementById('musicStatus');
+        const musicSourceSelect = document.getElementById('musicSource');
+        const musicSourceOverlay = document.getElementById('musicSourceOverlay');
+        const volumeSlider = document.getElementById('volume');
+        const muteBtn = document.getElementById('muteBtn');
+        const stopMusicBtn = document.getElementById('stopMusicBtn');
+
+        const originalBgmSrc = bgm.src;
+
         let width, height;
-        let player = { x: 0, y: 0, size: 10, color: 'white', speed: 5, firing: false, polarity: 'white', action: false, grazeMeter: 0, reflectMeter: 100, moved: false };
+        let playerData = { x: 0, y: 0, size: 10, color: 'white', speed: 5, firing: false, polarity: 'white', action: false, grazeMeter: 0, reflectMeter: 100, moved: false };
         let bullets = [];
         let enemyBullets = [];
         let particles = [];
@@ -64,6 +133,14 @@
         let paused = false;
         let MAX_PARTICLES = 300;
         let MAX_ENEMY_BULLETS = 400;
+        let customMusicLoaded = false;
+        let lastLoadedMusicUrl = '';
+        let musicVolume = 0.9;
+        let usingYouTube = false;
+        let ytPlayer = null;
+        let ytReady = false;
+        let lastYouTubeId = '';
+
         function resize() {
             width = window.innerWidth;
             height = window.innerHeight;
@@ -71,8 +148,8 @@
             canvas.height = height;
             bossCanvas.width = 512;
             bossCanvas.height = 512;
-            player.x = width / 2;
-            player.y = height - 50;
+            playerData.x = width / 2;
+            playerData.y = height - 50;
             boss.x = width / 2;
             boss.y = 100;
         }
@@ -80,9 +157,33 @@
         window.addEventListener('resize', resize);
         window.addEventListener('keydown', e => keys[e.key] = true);
         window.addEventListener('keyup', e => keys[e.key] = false);
+
         canvas.addEventListener('touchstart', e => { touching = true; touchX = e.touches[0].clientX; touchY = e.touches[0].clientY; });
         canvas.addEventListener('touchmove', e => { touchX = e.touches[0].clientX; touchY = e.touches[0].clientY; });
         canvas.addEventListener('touchend', () => touching = false);
+
+        canvas.addEventListener('mousedown', (e) => {
+            try {
+                if (e.button === 0 && (menu.style.display === 'none' || menu.style.display === '' )) {
+                    openMusicOverlay();
+                    e.preventDefault();
+                }
+            } catch (err) {}
+        });
+
+        function openMusicOverlay() {
+            musicOverlay.style.display = 'block';
+            musicUrlOverlay.value = lastLoadedMusicUrl || '';
+            musicSourceOverlay.value = usingYouTube ? 'youtube' : 'auto';
+            musicStatus.innerText = '';
+        }
+
+        function closeOverlay() {
+            musicOverlay.style.display = 'none';
+        }
+
+        closeMusicOverlay.addEventListener('click', () => closeOverlay());
+
         function startGame(mode) {
             currentMode = mode;
             infinite = mode === 'Infinite';
@@ -91,13 +192,14 @@
             if (isMobile) actionBtn.style.display = 'block';
             phase = 1;
             score = 0;
-            player.grazeMeter = 0;
-            player.reflectMeter = 100;
-            player.polarity = 'white';
+            playerData.grazeMeter = 0;
+            playerData.reflectMeter = 100;
+            playerData.polarity = 'white';
             generateBoss();
-            try { bgm.play().catch(() => {}); } catch (e) {}
+            playSelectedMusic();
             gameLoop();
         }
+
         function generateBoss() {
             boss.hp = 1000 + (phase - 1) * 500;
             boss.maxHp = boss.hp;
@@ -107,9 +209,10 @@
             boss.shape = generateRandomShape();
             boss.attacks = chooseAttacks();
             paused = false;
-            player.moved = false;
+            playerData.moved = false;
             renderBossToCanvas();
         }
+
         function generateRandomShape() {
             let shapes = [];
             let numLayers = Math.floor(Math.random() * 3) + 2;
@@ -137,39 +240,44 @@
             }
             return shapes;
         }
+
         function chooseAttacks() {
             let attacks = ['spiral', 'wave', 'laser', 'burst', 'homing', 'circleBurst', 'cross', 'randomSpray', 'vortex', 'beam', 'scatter', 'ring', 'zigzag'];
             let selected = [];
             for (let i = 0; i < 5; i++) selected.push(attacks[Math.floor(Math.random() * attacks.length)]);
             return selected;
         }
-        function actionPress() { player.action = true; }
-        function actionRelease() { player.action = false; }
+
+        function actionPress() { playerData.action = true; }
+        function actionRelease() { playerData.action = false; }
+
         function updatePlayer() {
-            let oldX = player.x;
-            let oldY = player.y;
-            if (keys['w'] || keys['W']) player.y -= player.speed;
-            if (keys['a'] || keys['A']) player.x -= player.speed;
-            if (keys['s'] || keys['S']) player.y += player.speed;
-            if (keys['d'] || keys['D']) player.x += player.speed;
-            if (keys[' '] || !isMobile) player.firing = true; else player.firing = false;
+            let oldX = playerData.x;
+            let oldY = playerData.y;
+            if (keys['w'] || keys['W']) playerData.y -= playerData.speed;
+            if (keys['a'] || keys['A']) playerData.x -= playerData.speed;
+            if (keys['s'] || keys['S']) playerData.y += playerData.speed;
+            if (keys['d'] || keys['D']) playerData.x += playerData.speed;
+            if (keys[' '] || !isMobile) playerData.firing = true; else playerData.firing = false;
             if (touching) {
-                player.x = touchX;
-                player.y = touchY;
-                player.firing = true;
+                playerData.x = touchX;
+                playerData.y = touchY;
+                playerData.firing = true;
             }
-            if (player.x < player.size) player.x = player.size;
-            if (player.x > width - player.size) player.x = width - player.size;
-            if (player.y < player.size) player.y = player.size;
-            if (player.y > height - player.size) player.y = height - player.size;
-            if (paused && (player.x !== oldX || player.y !== oldY)) player.moved = true;
+            if (playerData.x < playerData.size) playerData.x = playerData.size;
+            if (playerData.x > width - playerData.size) playerData.x = width - playerData.size;
+            if (playerData.y < playerData.size) playerData.y = playerData.size;
+            if (playerData.y > height - playerData.size) playerData.y = height - playerData.size;
+            if (paused && (playerData.x !== oldX || playerData.y !== oldY)) playerData.moved = true;
         }
+
         function firePlayer() {
-            if (player.firing) {
-                bullets.push({ x: player.x, y: player.y - player.size, vx: 0, vy: -12 - phase * 0.2, color: 'cyan', trail: [] });
+            if (playerData.firing) {
+                bullets.push({ x: playerData.x, y: playerData.y - playerData.size, vx: 0, vy: -12 - phase * 0.2, color: 'cyan', trail: [] });
                 try { laserSound.currentTime = 0; laserSound.play(); } catch (e) {}
             }
         }
+
         function updateBullets() {
             for (let i = bullets.length - 1; i >= 0; i--) {
                 let b = bullets[i];
@@ -183,8 +291,8 @@
                 eb.x += eb.vx;
                 eb.y += eb.vy;
                 if (eb.type === 'homing') {
-                    let dx = player.x - eb.x;
-                    let dy = player.y - eb.y;
+                    let dx = playerData.x - eb.x;
+                    let dy = playerData.y - eb.y;
                     let dist = Math.sqrt(dx*dx + dy*dy);
                     if (dist > 0) {
                         let sp = 5 + phase * 0.5;
@@ -199,6 +307,7 @@
             }
             if (enemyBullets.length > MAX_ENEMY_BULLETS) enemyBullets.splice(0, enemyBullets.length - MAX_ENEMY_BULLETS);
         }
+
         function bossAI() {
             if (paused) return;
             if (boss.hp / boss.maxHp < 0.3) {
@@ -210,6 +319,7 @@
             if (Math.random() < boss.attackFreq || boss.phase === 2 && Math.random() < 0.08) fireBossAttack(attack);
             boss.x += Math.sin(Date.now() / 1000) * (1.5 + phase * 0.1);
         }
+
         function fireBossAttack(type) {
             let count = boss.phase === 1 ? 8 : 16;
             let speed = boss.phase === 1 ? 2.8 + phase * 0.4 : 4 + phase * 0.5;
@@ -217,19 +327,20 @@
             let color = colors[Math.floor(Math.random() * colors.length)];
             if (type === 'spiral') for (let i = 0; i < count; i++) { let angle = (i / count) * Math.PI * 2 + Date.now() / 500; enemyBullets.push({ x: boss.x, y: boss.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, color, trail: [], type: 'normal' }); }
             else if (type === 'wave') for (let i = 0; i < count; i++) { let angle = Math.PI + (i - count/2) * 0.1 + Math.sin(Date.now() / 1000) * 0.18; enemyBullets.push({ x: boss.x, y: boss.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, color, trail: [], type: 'normal' }); }
-            else if (type === 'laser') for (let i = 0; i < 4; i++) { let angle = Math.atan2(player.y - boss.y, player.x - boss.x) + (i-1.5)*0.08; enemyBullets.push({ x: boss.x, y: boss.y, vx: Math.cos(angle) * speed * 1.6, vy: Math.sin(angle) * speed * 1.6, color, trail: [], type: 'normal' }); }
+            else if (type === 'laser') for (let i = 0; i < 4; i++) { let angle = Math.atan2(playerData.y - boss.y, playerData.x - boss.x) + (i-1.5)*0.08; enemyBullets.push({ x: boss.x, y: boss.y, vx: Math.cos(angle) * speed * 1.6, vy: Math.sin(angle) * speed * 1.6, color, trail: [], type: 'normal' }); }
             else if (type === 'burst') for (let i = 0; i < count; i++) { let angle = Math.random() * Math.PI * 2; enemyBullets.push({ x: boss.x, y: boss.y, vx: Math.cos(angle) * speed * (0.8 + Math.random()*0.8), vy: Math.sin(angle) * speed * (0.8 + Math.random()*0.8), color, trail: [], type: 'normal' }); }
             else if (type === 'homing') for (let i = 0; i < Math.floor(count/2); i++) enemyBullets.push({ x: boss.x, y: boss.y, vx: 0, vy: 0, color, trail: [], type: 'homing' });
             else if (type === 'circleBurst') for (let i = 0; i < Math.floor(count*1.2); i++) { let angle = (i / count) * Math.PI * 2; enemyBullets.push({ x: boss.x, y: boss.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, color, trail: [], type: 'normal' }); }
             else if (type === 'cross') for (let i = 0; i < count; i++) { let angle = Math.PI / 4 + i * Math.PI / 2 + Date.now() / 2000; enemyBullets.push({ x: boss.x, y: boss.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, color, trail: [], type: 'normal' }); }
             else if (type === 'randomSpray') for (let i = 0; i < count * 2; i++) { let angle = Math.PI + Math.random() * Math.PI / 2 - Math.PI / 4; enemyBullets.push({ x: boss.x, y: boss.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, color, trail: [], type: 'normal' }); }
             else if (type === 'vortex') for (let i = 0; i < count; i++) { let angle = (i / count) * Math.PI * 2 - Date.now() / 500; enemyBullets.push({ x: boss.x, y: boss.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, color, trail: [], type: 'normal' }); }
-            else if (type === 'beam') for (let i = 0; i < 3; i++) { let angle = Math.atan2(player.y - boss.y, player.x - boss.x) + (i-1)*0.25; for (let j = 0; j < 4; j++) enemyBullets.push({ x: boss.x, y: boss.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, color, trail: [], type: 'normal' }); }
+            else if (type === 'beam') for (let i = 0; i < 3; i++) { let angle = Math.atan2(playerData.y - boss.y, playerData.x - boss.x) + (i-1)*0.25; for (let j = 0; j < 4; j++) enemyBullets.push({ x: boss.x, y: boss.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, color, trail: [], type: 'normal' }); }
             else if (type === 'scatter') for (let i = 0; i < count; i++) { let angle = Math.PI + Math.random() * Math.PI - Math.PI / 2; enemyBullets.push({ x: boss.x, y: boss.y, vx: Math.cos(angle) * speed * Math.random(), vy: Math.sin(angle) * speed, color, trail: [], type: 'normal' }); }
             else if (type === 'ring') for (let i = 0; i < count; i++) { let angle = (i / count) * Math.PI * 2; enemyBullets.push({ x: boss.x, y: boss.y, vx: Math.cos(angle) * speed / 2, vy: Math.sin(angle) * speed / 2, color, trail: [], type: 'normal' }); }
             else if (type === 'zigzag') for (let i = 0; i < count; i++) { let angle = Math.PI + (i - count/2) * 0.05; enemyBullets.push({ x: boss.x, y: boss.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, color, trail: [], type: 'zigzag' }); }
             if (enemyBullets.length > MAX_ENEMY_BULLETS) enemyBullets.splice(0, enemyBullets.length - MAX_ENEMY_BULLETS);
         }
+
         function checkCollisions() {
             if (paused) return;
             for (let i = bullets.length - 1; i >= 0; i--) {
@@ -249,48 +360,67 @@
                         createParticles(boss.x, boss.y, 'red', 140);
                         shake = 18;
                         paused = true;
-                        pauseScreen.innerText = `Score: ${score}\nMove to Continue`;
+                        pauseScreen.innerText = `Score: ${score}
+Move to Continue`;
                         pauseScreen.style.display = 'block';
                     }
                 }
             }
             for (let i = enemyBullets.length - 1; i >= 0; i--) {
                 let eb = enemyBullets[i];
-                let dx = eb.x - player.x;
-                let dy = eb.y - player.y;
+                let dx = eb.x - playerData.x;
+                let dy = eb.y - playerData.y;
                 let dist = Math.sqrt(dx*dx + dy*dy);
-                if (dist < player.size + 5) {
+                if (dist < playerData.size + 5) {
                     if (handleModeCollision(eb)) {
                         enemyBullets.splice(i, 1);
                         createParticles(eb.x, eb.y, eb.color, 12);
                     } else endGame();
-                } else if (dist < player.size + 16) {
-                    if (currentMode === 'Psy') player.grazeMeter = Math.min(100, player.grazeMeter + 2);
+                } else if (dist < playerData.size + 16) {
+                    if (currentMode === 'Psy') playerData.grazeMeter = Math.min(100, playerData.grazeMeter + 2);
                     score += 20;
                     createParticles(eb.x, eb.y, 'white', 6);
                 }
             }
         }
+
         function handleModeCollision(eb) {
-            if (currentMode === 'Normal' && player.action) { enemyBullets = []; return true; }
-            else if (currentMode === 'Psy' && player.grazeMeter >= 100) { player.grazeMeter = 0; return true; }
-            else if (currentMode === 'Ika' && eb.color === player.polarity) { bullets.push({ x: eb.x, y: eb.y, vx: 0, vy: -10, color: 'cyan', trail: [] }); return true; }
-            else if (currentMode === 'GW' && player.action && player.reflectMeter > 0) { eb.vx = -eb.vx; eb.vy = -eb.vy; player.reflectMeter -= 6; return true; }
+            if (currentMode === 'Normal' && playerData.action) {
+                enemyBullets = [];
+                return true;
+            }
+            else if (currentMode === 'Psy' && playerData.grazeMeter >= 100) {
+                playerData.grazeMeter = 0;
+                return true;
+            }
+            else if (currentMode === 'Ika' && eb.color === playerData.polarity) {
+                bullets.push({ x: eb.x, y: eb.y, vx: 0, vy: -10, color: 'cyan', trail: [] });
+                return true;
+            }
+            else if (currentMode === 'GW' && playerData.action && playerData.reflectMeter > 0) {
+                eb.vx = -eb.vx;
+                eb.vy = -eb.vy;
+                playerData.reflectMeter -= 6;
+                return true;
+            }
             return false;
         }
+
         function updateModes() {
             if (paused) return;
-            if (currentMode === 'Psy' && player.action) player.grazeMeter += 1;
-            if (currentMode === 'Ika' && player.action) player.polarity = player.polarity === 'white' ? 'black' : 'white';
-            if (currentMode === 'GW') player.reflectMeter = Math.min(100, player.reflectMeter + 0.25);
+            if (currentMode === 'Psy' && playerData.action) playerData.grazeMeter += 1;
+            if (currentMode === 'Ika' && playerData.action) playerData.polarity = playerData.polarity === 'white' ? 'black' : 'white';
+            if (currentMode === 'GW') playerData.reflectMeter = Math.min(100, playerData.reflectMeter + 0.25);
             if (infinite) boss.hp += 0.25 + phase * 0.08;
         }
+
         function createParticles(x, y, color, count = 12) {
             for (let i = 0; i < count; i++) {
                 if (particles.length > MAX_PARTICLES) particles.shift();
                 particles.push({ x, y, vx: (Math.random() - 0.5) * 6, vy: (Math.random() - 0.5) * 6, life: 40 + Math.random() * 30, color });
             }
         }
+
         function updateParticles() {
             for (let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i];
@@ -300,6 +430,7 @@
                 if (p.life <= 0) particles.splice(i, 1);
             }
         }
+
         function renderBossToCanvas() {
             let cw = bossCanvas.width;
             let ch = bossCanvas.height;
@@ -324,14 +455,15 @@
             }
             bossCtx.restore();
         }
+
         function draw() {
             ctx.clearRect(0, 0, width, height);
             if (shake > 0) { ctx.save(); ctx.translate((Math.random() * shake) - (shake / 2), (Math.random() * shake) - (shake / 2)); shake--; }
             if (flash > 0) { ctx.globalAlpha = 1.2; flash--; } else ctx.globalAlpha = 1;
             ctx.save();
-            ctx.fillStyle = player.polarity || 'white';
+            ctx.fillStyle = playerData.polarity || 'white';
             ctx.beginPath();
-            ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
+            ctx.arc(playerData.x, playerData.y, playerData.size, 0, Math.PI * 2);
             ctx.fill();
             ctx.restore();
             ctx.save();
@@ -381,26 +513,28 @@
             ctx.restore();
             if (currentMode === 'Psy') {
                 ctx.fillStyle = 'rgba(255,255,255,0.9)';
-                ctx.fillRect(10, height - 26, player.grazeMeter * 2, 12);
+                ctx.fillRect(10, height - 26, playerData.grazeMeter * 2, 12);
             } else if (currentMode === 'GW') {
                 ctx.fillStyle = 'rgba(100,255,140,0.9)';
-                ctx.fillRect(10, height - 26, player.reflectMeter * 2, 12);
+                ctx.fillRect(10, height - 26, playerData.reflectMeter * 2, 12);
             }
             scoreDiv.innerText = `Score: ${score}`;
             if (shake > 0) ctx.restore();
             ctx.globalAlpha = 1;
         }
+
         function endGame() {
             menu.style.display = 'block';
             scoreDiv.style.display = 'none';
             actionBtn.style.display = 'none';
             pauseScreen.style.display = 'none';
-            try { bgm.pause(); } catch (e) {}
+            try { stopAllMusic(); } catch (e) {}
             bullets = [];
             enemyBullets = [];
             particles = [];
             paused = false;
         }
+
         function gameLoop() {
             updatePlayer();
             if (!paused) {
@@ -409,7 +543,7 @@
                 bossAI();
                 checkCollisions();
                 updateModes();
-            } else if (player.moved) {
+            } else if (playerData.moved) {
                 pauseScreen.style.display = 'none';
                 phase++;
                 if (phase > 40 && !infinite) endGame(); else generateBoss();
@@ -418,6 +552,191 @@
             draw();
             requestAnimationFrame(gameLoop);
         }
+
+        function setBgmVolume(v) {
+            musicVolume = v;
+            try { bgm.volume = musicVolume; } catch (e) {}
+            try { if (ytPlayer && ytReady) ytPlayer.setVolume(Math.round(musicVolume * 100)); } catch (e) {}
+        }
+
+        function tryLoadMusicDirect(url, onSuccess, onError) {
+            let audioTest = new Audio();
+            audioTest.crossOrigin = 'anonymous';
+            let loaded = false;
+            let timeout = setTimeout(() => {
+                if (!loaded) {
+                    audioTest.src = '';
+                    onError('Tempo esgotado ao carregar');
+                }
+            }, 10000);
+            audioTest.addEventListener('canplaythrough', () => {
+                loaded = true;
+                clearTimeout(timeout);
+                onSuccess();
+                audioTest.src = '';
+            });
+            audioTest.addEventListener('error', () => {
+                clearTimeout(timeout);
+                onError('Erro ao carregar o arquivo de áudio');
+            });
+            audioTest.src = url;
+            audioTest.load();
+        }
+
+        function parseYouTubeId(url) {
+            try {
+                let u = url.trim();
+                if (u.indexOf('youtu.be/') !== -1) {
+                    return u.split('youtu.be/')[1].split('?')[0].split('&')[0];
+                }
+                if (u.indexOf('youtube.com/watch') !== -1) {
+                    let params = u.split('?')[1] || '';
+                    let sp = params.split('&');
+                    for (let p of sp) { if (p.indexOf('v=') === 0) return p.split('v=')[1]; }
+                }
+                if (u.indexOf('youtube.com/') !== -1 && u.indexOf('v=') === -1) {
+                    let parts = u.split('/');
+                    return parts[parts.length-1].split('?')[0];
+                }
+                return '';
+            } catch (e) { return ''; }
+        }
+
+        function loadYouTubeById(id) {
+            lastYouTubeId = id;
+            usingYouTube = true;
+            if (!ytPlayer) {
+                ytPlayer = new YT.Player('ytPlayerPlaceholder', { height: '0', width: '0', videoId: id, playerVars: { playsinline: 1, controls: 0, origin: location.origin }, events: { onReady: (e) => { ytReady = true; e.target.setVolume(Math.round(musicVolume * 100)); }, onStateChange: (e) => { } } });
+                return;
+            }
+            if (ytReady && ytPlayer) {
+                ytPlayer.loadVideoById(id);
+                ytPlayer.pauseVideo();
+            } else {
+                let t = setInterval(() => { if (ytReady) { clearInterval(t); if (ytPlayer) { ytPlayer.loadVideoById(id); ytPlayer.pauseVideo(); } } }, 200);
+            }
+        }
+
+        function playSelectedMusic() {
+            if (usingYouTube && lastYouTubeId) {
+                try { bgm.pause(); } catch (e) {}
+                if (ytReady && ytPlayer) {
+                    ytPlayer.setVolume(Math.round(musicVolume * 100));
+                    ytPlayer.playVideo();
+                } else {
+                    loadYouTubeById(lastYouTubeId);
+                    let t = setInterval(() => { if (ytReady && ytPlayer) { clearInterval(t); ytPlayer.setVolume(Math.round(musicVolume * 100)); ytPlayer.playVideo(); } }, 300);
+                }
+            } else if (customMusicLoaded && lastLoadedMusicUrl) {
+                try { bgm.src = lastLoadedMusicUrl; bgm.volume = musicVolume; bgm.play().catch(() => {}); } catch (e) {}
+            } else {
+                try { bgm.src = originalBgmSrc; bgm.volume = musicVolume; bgm.play().catch(() => {}); } catch (e) {}
+            }
+        }
+
+        function stopAllMusic() {
+            try { bgm.pause(); } catch (e) {}
+            try { if (ytPlayer && ytReady) { ytPlayer.stopVideo(); } } catch (e) {}
+        }
+
+        loadMusicBtn.addEventListener('click', () => {
+            let url = musicUrlInput.value.trim();
+            if (!url) { musicStatus.innerText = 'Cole uma URL válida.'; return; }
+            let source = musicSourceSelect.value;
+            if (source === 'auto') {
+                let ytId = parseYouTubeId(url);
+                if (ytId) source = 'youtube'; else source = 'direct';
+            }
+            if (source === 'youtube') {
+                let id = parseYouTubeId(url);
+                if (!id) { musicStatus.innerText = 'URL YouTube inválida.'; return; }
+                musicStatus.innerText = 'Carregando YouTube...';
+                loadYouTubeById(id);
+                lastYouTubeId = id;
+                usingYouTube = true;
+                customMusicLoaded = false;
+                lastLoadedMusicUrl = '';
+                musicStatus.innerText = 'YouTube pronto. Clique em um modo para iniciar.';
+            } else {
+                musicStatus.innerText = 'Carregando áudio direto...';
+                tryLoadMusicDirect(url, () => {
+                    bgm.src = url;
+                    lastLoadedMusicUrl = url;
+                    customMusicLoaded = true;
+                    usingYouTube = false;
+                    lastYouTubeId = '';
+                    musicStatus.innerText = 'Áudio direto carregado e pronto. Clique em um modo para iniciar.';
+                }, (err) => {
+                    musicStatus.innerText = 'Falha ao carregar: ' + err;
+                });
+            }
+        });
+
+        loadMusicBtnOverlay.addEventListener('click', () => {
+            let url = musicUrlOverlay.value.trim();
+            if (!url) { musicStatus.innerText = 'Cole uma URL válida.'; return; }
+            let source = musicSourceOverlay.value;
+            if (source === 'auto') {
+                let ytId = parseYouTubeId(url);
+                if (ytId) source = 'youtube'; else source = 'direct';
+            }
+            if (source === 'youtube') {
+                let id = parseYouTubeId(url);
+                if (!id) { musicStatus.innerText = 'URL YouTube inválida.'; return; }
+                musicStatus.innerText = 'Carregando YouTube...';
+                loadYouTubeById(id);
+                lastYouTubeId = id;
+                usingYouTube = true;
+                customMusicLoaded = false;
+                lastLoadedMusicUrl = '';
+                musicStatus.innerText = 'YouTube carregado. Feche para continuar.';
+            } else {
+                musicStatus.innerText = 'Carregando áudio direto...';
+                tryLoadMusicDirect(url, () => {
+                    bgm.src = url;
+                    lastLoadedMusicUrl = url;
+                    customMusicLoaded = true;
+                    usingYouTube = false;
+                    lastYouTubeId = '';
+                    musicStatus.innerText = 'Áudio direto carregado. Feche para continuar.';
+                }, (err) => {
+                    musicStatus.innerText = 'Falha ao carregar: ' + err;
+                });
+            }
+        });
+
+        useOriginalBtn.addEventListener('click', () => {
+            bgm.src = originalBgmSrc;
+            lastLoadedMusicUrl = '';
+            customMusicLoaded = false;
+            usingYouTube = false;
+            lastYouTubeId = '';
+            musicStatus.innerText = 'Música original restaurada.';
+        });
+
+        muteBtn.addEventListener('click', () => {
+            if (bgm.muted) { bgm.muted = false; muteBtn.innerText = 'Mudo'; } else { bgm.muted = true; muteBtn.innerText = 'Sem som'; }
+            try { if (ytPlayer && ytReady) ytPlayer.mute(); } catch (e) {}
+        });
+
+        stopMusicBtn.addEventListener('click', () => { stopAllMusic(); musicStatus.innerText = 'Música parada.'; });
+
+        volumeSlider.addEventListener('input', (e) => { setBgmVolume(parseFloat(e.target.value)); });
+
+        musicUrlInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') loadMusicBtn.click(); });
+        musicUrlOverlay.addEventListener('keydown', (e) => { if (e.key === 'Enter') loadMusicBtnOverlay.click(); });
+
+        bgm.addEventListener('error', () => { musicStatus.innerText = 'Erro ao reproduzir a música. Verifique a URL.'; });
+
+        bgm.addEventListener('play', () => { musicStatus.innerText = 'Reproduzindo: ' + (lastLoadedMusicUrl || 'música original'); });
+
+        document.addEventListener('visibilitychange', () => { if (document.hidden) { try { bgm.pause(); if (ytPlayer && ytReady) ytPlayer.pauseVideo(); } catch (e) {} } else { try { if (!usingYouTube) bgm.play().catch(() => {}); else if (ytPlayer && ytReady) ytPlayer.playVideo(); } catch (e) {} } });
+
+        function onYouTubeIframeAPIReady() {
+            ytReady = true;
+        }
+
+        setBgmVolume(musicVolume);
     </script>
 </body>
 </html>
